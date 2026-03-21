@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      #root {
+        padding: 4px 16px;
+      }
+      #rename-form {
+        margin-top: 24px;
+      }
+      .toggle-link {
+        margin-left: 24px;
+      }
+      .status {
+        display: grid;
+        grid-template-columns: 80px 200px 80px;
+        align-items: center;
+      }
+    </style>
+    <title>Todos 2026</title>
+  </head>
+  <body>
+    <header>
+      <nav>
+        <p>
+          <a href="/">Zpět na hlavní stránku</a>
+        </p>
+      </nav>
+    </header>
+    <div id="root">
+      <h2><%= title %></h2>
+      <div class="status">
+        <p style="margin: 0">
+          <% if (done) { %> Hotové <% } else { %> Nehotové <% } %>
+        </p>
+        <a class="toggle-link" href="/toggle-todo/<%= id %>"
+          >označit jako <%= done ? "nehotové" : "hotové" %></a
+        >
+        <% if (done) { %>
+        <a href="/remove-todo/<%= id %>">odstranit</a>
+        <% } %>
+      </div>
+      <form id="rename-form" method="post" action="/rename-todo/<%= id %>">
+        <input name="title" type="text" placeholder="<%= title %>" />
+        <button type="submit">Přejmenovat</button>
+      </form>
+    </div>
+  </body>
+</html>
