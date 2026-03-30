@@ -1,45 +1,98 @@
 <!doctype html>
-<html lang="en">
+<html lang="cs">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <style>
-      #app-header {
-        padding-left: 16px;
-      }
-      #todo-form {
-        margin-left: 40px;
-      }
-      .todo-list {
-        max-width: 800px;
-      }
-      .todo-item {
-        display: grid;
-        grid-template-columns: auto 180px 80px;
-        align-items: center;
-        margin: 8px 0;
-      }
-    </style>
-    <title>Todos 2026</title>
+    <title>Todo seznam</title>
   </head>
   <body>
-    <h1 id="app-header">Hello, <%= name %>!</h1>
-    <ul class="todo-list">
-      <% for (const todo of todos) { %>
-      <li class="todo-item">
-        <a href="/todo/<%= todo.id %>"><%= todo.title %></a>
-        <a href="/toggle-todo/<%= todo.id %>">
-          označit jako <%= todo.done ? "nehotové" : "hotové" %>
-        </a>
-        <% if (todo.done) { %>
-        <a href="/remove-todo/<%= todo.id %>">odstranit</a>
+    <h1>&#9989; Todo seznam</h1>
+
+    <p>Hotovo: <%= todos.filter(t => t.done).length %> / <%= todos.length %></p>
+    <progress
+      value="<%= todos.filter(t => t.done).length %>"
+      max="<%= todos.length %>"
+    ></progress>
+
+    <hr />
+
+    <table border="1" cellpadding="6" cellspacing="0">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Úkol</th>
+          <th>Stav</th>
+          <th>Priorita</th>
+          <th>Akce</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (todos.length === 0) { %>
+          <td colspan="5">Zatím žádné todo</td>
+        <% } else { %>
+          <% for (const todo of todos) { %>
+            <tr>
+              <td><%= todo.id %></td>
+              <td>
+                <a href="/todo/<%= todo.id %>">
+                  <% if (todo.done) { %>
+                    <del><%= todo.title %></del>
+                    <% } else { %> <%= todo.title %> <% } %>
+                  </a>
+                </td>
+                <td align="center">
+                  <% if (todo.done) { %>
+                    <strong>&#10003; Hotovo</strong>
+                    <% } else { %>
+                      <em>&#8230; Čeká</em>
+                      <% } %>
+                    </td>
+                    <td><%= todo.priority %></td>
+                    <td>
+                      <% if (todo.done) { %>
+            <a href="/toggle-todo/<%= todo.id %>">&#8617; Nehotové</a>
+            &nbsp;
+            <a href="/remove-todo/<%= todo.id %>">&#10007; Odstranit</a>
+            <% } else { %>
+              <a href="/toggle-todo/<%= todo.id %>">&#10003; Hotové</a>
+              <% } %>
+            </td>
+          </tr>
+          <% } %>
         <% } %>
-      </li>
-      <% } %>
-    </ul>
-    <form id="todo-form" method="post" action="/add-todo">
-      <input name="title" placeholder="Název" />
-      <button type="submit">Přidat todo</button>
-    </form>
+      </tbody>
+    </table>
+
+    <hr />
+
+    <fieldset>
+      <legend><strong>Přidat nový úkol</strong></legend>
+      <form method="post" action="/add-todo">
+        <div style="max-width: 240px; display: grid; row-gap: 8px;">
+          <div style="display: grid;">
+            <label for="title">Název úkolu:</label>
+            <input
+              id="title"
+              name="title"
+              placeholder="Co je potřeba udělat?"
+            />
+          </div>
+          <div style="display: grid;">
+            <label for="">Priorita</label>
+            <select id="priority" name="priority">
+              <% for (const priority of priorities) { %>
+                <option
+                value="<%= priority %>"
+                <%= priority === defaultPriority ? "selected" : "" %>
+                >
+                <%= priority %>
+              </option>
+              <% } %>
+            </select>
+          </div>
+          <button type="submit" style="height: 32px;">&#43; Přidat</button>
+        </div>
+      </form>
+    </fieldset>
   </body>
 </html>

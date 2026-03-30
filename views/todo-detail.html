@@ -3,49 +3,81 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <style>
-      #root {
-        padding: 4px 16px;
-      }
-      #rename-form {
-        margin-top: 24px;
-      }
-      .toggle-link {
-        margin-left: 24px;
-      }
-      .status {
-        display: grid;
-        grid-template-columns: 80px 200px 80px;
-        align-items: center;
-      }
-    </style>
-    <title>Todos 2026</title>
+    <style></style>
+    <title><%= todo.title %> - Todo detail</title>
   </head>
   <body>
-    <header>
-      <nav>
-        <p>
-          <a href="/">Zpět na hlavní stránku</a>
-        </p>
-      </nav>
-    </header>
-    <div id="root">
-      <h2><%= title %></h2>
-      <div class="status">
-        <p style="margin: 0">
-          <% if (done) { %> Hotové <% } else { %> Nehotové <% } %>
-        </p>
-        <a class="toggle-link" href="/toggle-todo/<%= id %>"
-          >označit jako <%= done ? "nehotové" : "hotové" %></a
-        >
-        <% if (done) { %>
-        <a href="/remove-todo/<%= id %>">odstranit</a>
-        <% } %>
-      </div>
-      <form id="rename-form" method="post" action="/rename-todo/<%= id %>">
-        <input name="title" type="text" placeholder="<%= title %>" />
-        <button type="submit">Přejmenovat</button>
+    <p><a href="/">&larr; Zpět na seznam</a></p>
+
+    <h1>
+      <% if (todo.done) { %>
+      <del><%= todo.title %></del>
+      <% } else { %> <%= todo.title %> <% } %>
+    </h1>
+
+    <table border="1" cellpadding="6" cellspacing="0">
+      <tr>
+        <th>ID</th>
+        <td><%= todo.id %></td>
+      </tr>
+      <tr>
+        <th>Stav</th>
+        <td>
+          <% if (todo.done) { %>
+          <strong>&#10003; Hotovo</strong>
+          <% } else { %>
+          <em>&#8230; Čeká na splnění</em>
+          <% } %>
+        </td>
+      </tr>
+      <tr>
+        <th>Priorita</th>
+        <td>
+          <%= todo.priority %>
+        </td>
+      </tr>
+    </table>
+
+    <br />
+
+    <% if (todo.done) { %>
+    <a href="/toggle-todo/<%= todo.id %>">&#8617; Označit jako nehotové</a>
+    &nbsp;
+    <a href="/remove-todo/<%= todo.id %>">&#10007; Odstranit úkol</a>
+    <% } else { %>
+    <a href="/toggle-todo/<%= todo.id %>">&#10003; Označit jako hotové</a>
+    <% } %>
+
+    <hr />
+
+    <fieldset>
+      <legend><strong>Upravit název úkolu</strong></legend>
+      <form method="post" action="/update-todo/<%= todo.id %>">
+        <div style="max-width: 240px; display: grid; row-gap: 8px;">
+          <div style="display: grid;">
+            <label for="title">Nový název</label>
+            <input
+            id="title"
+            name="title"
+            value="<%= todo.title %>"
+            />
+          </div>
+          <div style="display: grid;">
+            <label for="">Priorita</label>
+            <select id="priority" name="priority">
+              <% for (const priority of priorities) { %>
+                <option
+                value="<%= priority %>"
+                <%= todo.priority === priority ? "selected" : "" %>
+                >
+                <%= priority %>
+              </option>
+              <% } %>
+            </select>
+          </div>
+          <button type="submit" style="height: 32px;">&#10003; Uložit</button>
+        </div>
       </form>
-    </div>
+    </fieldset>
   </body>
 </html>

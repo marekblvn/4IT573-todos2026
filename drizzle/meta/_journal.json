@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1774908938537,
+      "tag": "0000_dusty_karen_page",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1774908962081,
+      "tag": "0001_serious_sway",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1774909331603,
+      "tag": "0002_absurd_grandmaster",
+      "breakpoints": true
+    }
+  ]
+}
