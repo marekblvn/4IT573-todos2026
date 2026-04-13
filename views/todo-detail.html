@@ -3,81 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <style></style>
     <title><%= todo.title %> - Todo detail</title>
   </head>
   <body>
     <p><a href="/">&larr; Zpět na seznam</a></p>
+    <div id="todo-detail" data-todo-id="<%= todo.id %>">
+      <%- include("_todo-detail.html", { todo, priorities }) %>
+    </div>
 
-    <h1>
-      <% if (todo.done) { %>
-      <del><%= todo.title %></del>
-      <% } else { %> <%= todo.title %> <% } %>
-    </h1>
+    <script>
+      const ws = new WebSocket(`ws://${location.host}/ws`);
 
-    <table border="1" cellpadding="6" cellspacing="0">
-      <tr>
-        <th>ID</th>
-        <td><%= todo.id %></td>
-      </tr>
-      <tr>
-        <th>Stav</th>
-        <td>
-          <% if (todo.done) { %>
-          <strong>&#10003; Hotovo</strong>
-          <% } else { %>
-          <em>&#8230; Čeká na splnění</em>
-          <% } %>
-        </td>
-      </tr>
-      <tr>
-        <th>Priorita</th>
-        <td>
-          <%= todo.priority %>
-        </td>
-      </tr>
-    </table>
+      const detailEl = document.getElementById("todo-detail");
+      const currentTodoId = Number(detailEl.dataset.todoId);
 
-    <br />
+      ws.addEventListener("message", (event) => {
+        const data = JSON.parse(event.data);
 
-    <% if (todo.done) { %>
-    <a href="/toggle-todo/<%= todo.id %>">&#8617; Označit jako nehotové</a>
-    &nbsp;
-    <a href="/remove-todo/<%= todo.id %>">&#10007; Odstranit úkol</a>
-    <% } else { %>
-    <a href="/toggle-todo/<%= todo.id %>">&#10003; Označit jako hotové</a>
-    <% } %>
+        if (data.type !== "todo-detail") return;
+        if (Number(data.todoId) !== currentTodoId) return;
 
-    <hr />
+        detailEl.innerHTML = data.html;
 
-    <fieldset>
-      <legend><strong>Upravit název úkolu</strong></legend>
-      <form method="post" action="/update-todo/<%= todo.id %>">
-        <div style="max-width: 240px; display: grid; row-gap: 8px;">
-          <div style="display: grid;">
-            <label for="title">Nový název</label>
-            <input
-            id="title"
-            name="title"
-            value="<%= todo.title %>"
-            />
-          </div>
-          <div style="display: grid;">
-            <label for="">Priorita</label>
-            <select id="priority" name="priority">
-              <% for (const priority of priorities) { %>
-                <option
-                value="<%= priority %>"
-                <%= todo.priority === priority ? "selected" : "" %>
-                >
-                <%= priority %>
-              </option>
-              <% } %>
-            </select>
-          </div>
-          <button type="submit" style="height: 32px;">&#10003; Uložit</button>
-        </div>
-      </form>
-    </fieldset>
+        if (data.deleted) {
+          document.title = "Todočko bylo smazáno";
+        } else if (data.title) {
+          document.title = `${data.title} - Todo detail`;
+        }
+      });
+    </script>
   </body>
 </html>

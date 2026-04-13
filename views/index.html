@@ -8,7 +8,7 @@
   <body>
     <h1>&#9989; Todo seznam</h1>
 
-    <div id="todos"><%- include("_todos.html") %></div>
+    <div id="todo-list"><%- include("_todos.html") %></div>
 
     <hr />
 
@@ -42,15 +42,16 @@
       </form>
     </fieldset>
     <script>
-      const ws = new WebSocket("ws://localhost:3000/ws");
+      const ws = new WebSocket(`ws://${location.host}/ws`);
       ws.addEventListener("open", () => {
         console.log("WS Open");
         ws.send("Hello, World!");
       });
       ws.addEventListener("message", (ev) => {
-        const json = JSON.parse(ev.data);
-        if (json.type === "todos") {
-          document.getElementById("todos").innerHTML = json.html;
+        const data = JSON.parse(ev.data);
+        if (data.type === "todos") {
+          const todoList = document.getElementById("todo-list");
+          todoList.innerHTML = data.html;
         }
       });
     </script>
