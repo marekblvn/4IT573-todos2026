@@ -4,6 +4,8 @@ import ejs from "ejs";
 import { drizzle } from "drizzle-orm/libsql";
 import { todosTable } from "./src/schema.js";
 import { eq } from "drizzle-orm";
+import { createNodeWebSocket } from "@hono/node-ws";
+import { WSContext } from "hono/ws";
 import { defaultPriority, priorities } from "./src/priority-enum.js";
 
 const db = drizzle({
@@ -12,6 +14,13 @@ const db = drizzle({
 });
 
 const app = new Hono();
+
+const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
+
+/**
+ * @type {Set<WSContext<WebSocket>>}
+ */
+let webSockets = new Set();
 
 app.use("*", async (c, next) => {
   c.redirectBack = (fallbackUrl = "/") => {
@@ -30,6 +39,23 @@ app.get(async (c, next) => {
   console.log(c.req.method, c.req.url);
   await next();
 });
+
+app.get(
+  "/ws",
+  upgradeWebSocket((c) => ({
+    onOpen: (evt, ws) => {
+      webSockets.add(ws);
+      console.log("Open web sockets:", webSockets.size);
+    },
+    onMessage: () => {
+      console.log("message");
+    },
+    onClose: (evt, ws) => {
+      console.log("close");
+      webSockets.delete(ws);
+    },
+  })),
+);
 
 app.get("/", async (c) => {
   const todos = await db.select().from(todosTable).all();
@@ -61,6 +87,24 @@ app.get("/todo/:id", async (c) => {
   return c.html(detail);
 });
 
+const sendTodoToAllWebsockets = async () => {
+  try {
+    const todos = await db.select().from(todosTable).all();
+    const html = await ejs.renderFile("views/_todos.html", { todos });
+
+    for (const webSocket of webSockets) {
+      webSocket.send(
+        JSON.stringify({
+          type: "todos",
+          html,
+        }),
+      );
+    }
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 app.post("/add-todo", async (c) => {
   const body = await c.req.formData();
   const title = body.get("title");
@@ -71,6 +115,8 @@ app.post("/add-todo", async (c) => {
     done: false,
     priority,
   });
+
+  sendTodoToAllWebsockets();
 
   c.status(201);
   return c.redirect("/");
@@ -132,6 +178,8 @@ app.notFound(async (c) => {
   return c.html(html);
 });
 
-serve(app, (info) => {
+const server = serve(app, (info) => {
   console.log(`Server started on http://localhost:${info.port}`);
 });
+
+injectWebSocket(server);

@@ -8,60 +8,7 @@
   <body>
     <h1>&#9989; Todo seznam</h1>
 
-    <p>Hotovo: <%= todos.filter(t => t.done).length %> / <%= todos.length %></p>
-    <progress
-      value="<%= todos.filter(t => t.done).length %>"
-      max="<%= todos.length %>"
-    ></progress>
-
-    <hr />
-
-    <table border="1" cellpadding="6" cellspacing="0">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Úkol</th>
-          <th>Stav</th>
-          <th>Priorita</th>
-          <th>Akce</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% if (todos.length === 0) { %>
-          <td colspan="5">Zatím žádné todo</td>
-        <% } else { %>
-          <% for (const todo of todos) { %>
-            <tr>
-              <td><%= todo.id %></td>
-              <td>
-                <a href="/todo/<%= todo.id %>">
-                  <% if (todo.done) { %>
-                    <del><%= todo.title %></del>
-                    <% } else { %> <%= todo.title %> <% } %>
-                  </a>
-                </td>
-                <td align="center">
-                  <% if (todo.done) { %>
-                    <strong>&#10003; Hotovo</strong>
-                    <% } else { %>
-                      <em>&#8230; Čeká</em>
-                      <% } %>
-                    </td>
-                    <td><%= todo.priority %></td>
-                    <td>
-                      <% if (todo.done) { %>
-            <a href="/toggle-todo/<%= todo.id %>">&#8617; Nehotové</a>
-            &nbsp;
-            <a href="/remove-todo/<%= todo.id %>">&#10007; Odstranit</a>
-            <% } else { %>
-              <a href="/toggle-todo/<%= todo.id %>">&#10003; Hotové</a>
-              <% } %>
-            </td>
-          </tr>
-          <% } %>
-        <% } %>
-      </tbody>
-    </table>
+    <div id="todos"><%- include("_todos.html") %></div>
 
     <hr />
 
@@ -94,5 +41,18 @@
         </div>
       </form>
     </fieldset>
+    <script>
+      const ws = new WebSocket("ws://localhost:3000/ws");
+      ws.addEventListener("open", () => {
+        console.log("WS Open");
+        ws.send("Hello, World!");
+      });
+      ws.addEventListener("message", (ev) => {
+        const json = JSON.parse(ev.data);
+        if (json.type === "todos") {
+          document.getElementById("todos").innerHTML = json.html;
+        }
+      });
+    </script>
   </body>
 </html>
