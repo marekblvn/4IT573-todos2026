@@ -18,24 +18,24 @@
   </thead>
   <tbody>
     <% for (const todo of todos) { %>
-    <tr>
-      <td><%= todo.id %></td>
-      <td>
+    <tr data-todo-id="<%= todo.id %>">
+      <td class="todo-id"><%= todo.id %></td>
+      <td class="todo-title">
         <a href="/todo/<%= todo.id %>">
           <% if (todo.done) { %>
           <del><%= todo.title %></del>
           <% } else { %> <%= todo.title %> <% } %>
         </a>
       </td>
-      <td><%= todo.priority %></td>
-      <td align="center">
+      <td class="todo-priority"><%= todo.priority %></td>
+      <td align="center" class="todo-status">
         <% if (todo.done) { %>
         <strong>&#10003; Hotovo</strong>
         <% } else { %>
         <em>&#8230; Čeká</em>
         <% } %>
       </td>
-      <td>
+      <td class="todo-actions">
         <% if (todo.done) { %>
         <a href="/toggle-todo/<%= todo.id %>">&#8617; Nehotové</a>
         &nbsp;
