@@ -3,21 +3,19 @@ import ejs from "ejs";
 import { todosTable } from "./schema.js";
 import { eq } from "drizzle-orm";
 import { createNodeWebSocket } from "@hono/node-ws";
-import { WSContext } from "hono/ws";
 import { defaultPriority, priorities } from "./priority-enum.js";
 import { createDb } from "./db.js";
+import WSService from "./ws.js";
+import { LibSQLDatabase } from "drizzle-orm/libsql";
 
+/**
+ * @param {LibSQLDatabase} db
+ */
 export const createApp = (db = createDb("file:db.sqlite")) => {
+  const wsService = new WSService(db);
   const app = new Hono();
 
-  const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({
-    app,
-  });
-
-  /**
-   * @type {Set<WSContext<WebSocket>>}
-   */
-  let webSockets = new Set();
+  const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
 
   app.use("*", async (c, next) => {
     c.redirectBack = (fallbackUrl = "/") => {
@@ -39,17 +37,14 @@ export const createApp = (db = createDb("file:db.sqlite")) => {
 
   app.get(
     "/ws",
-    upgradeWebSocket((c) => ({
-      onOpen: (evt, ws) => {
-        webSockets.add(ws);
-        console.log("Open web sockets:", webSockets.size);
+    upgradeWebSocket((_c) => ({
+      onOpen: (_evt, ws) => {
+        wsService.webSockets.add(ws);
+        console.log("Open web sockets:", wsService.webSockets.size);
       },
-      onMessage: () => {
-        console.log("message");
-      },
-      onClose: (evt, ws) => {
-        console.log("close");
-        webSockets.delete(ws);
+      onClose: (_evt, ws) => {
+        console.log("Closed web socket:", wsService.webSockets.size);
+        wsService.webSockets.delete(ws);
       },
     })),
   );
@@ -84,24 +79,6 @@ export const createApp = (db = createDb("file:db.sqlite")) => {
     return c.html(detail);
   });
 
-  const sendTodoToAllWebsockets = async () => {
-    try {
-      const todos = await db.select().from(todosTable).all();
-      const html = await ejs.renderFile("views/_todos.html", { todos });
-
-      for (const webSocket of webSockets) {
-        webSocket.send(
-          JSON.stringify({
-            type: "todos",
-            html,
-          }),
-        );
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
   app.post("/add-todo", async (c) => {
     const body = await c.req.formData();
     const title = body.get("title");
@@ -113,7 +90,7 @@ export const createApp = (db = createDb("file:db.sqlite")) => {
       priority,
     });
 
-    sendTodoToAllWebsockets();
+    wsService.sendTodosToAllWebsockets();
 
     c.status(201);
     return c.redirect("/");
@@ -123,6 +100,9 @@ export const createApp = (db = createDb("file:db.sqlite")) => {
     const id = Number(c.req.param("id"));
 
     await db.delete(todosTable).where(eq(todosTable.id, id));
+
+    wsService.sendTodosToAllWebsockets();
+    wsService.sendTodoDetailToAllWebsockets(id);
 
     return c.redirect("/");
   });
@@ -142,6 +122,9 @@ export const createApp = (db = createDb("file:db.sqlite")) => {
         .set({ done: !todo.done })
         .where(eq(todosTable.id, id));
     }
+
+    wsService.sendTodosToAllWebsockets();
+    wsService.sendTodoDetailToAllWebsockets(id);
 
     return c.redirectBack();
   });
@@ -163,6 +146,9 @@ export const createApp = (db = createDb("file:db.sqlite")) => {
         .set({ title, priority })
         .where(eq(todosTable.id, id));
     }
+
+    wsService.sendTodosToAllWebsockets();
+    wsService.sendTodoDetailToAllWebsockets(id);
 
     return c.redirectBack();
   });

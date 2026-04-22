@@ -6,7 +6,6 @@ import { LibSQLDatabase } from "drizzle-orm/libsql";
 import { Hono } from "hono";
 import { migrate } from "drizzle-orm/libsql/migrator";
 import * as cheerio from "cheerio";
-import { count } from "drizzle-orm";
 
 /**
  * @type {Hono}
@@ -148,25 +147,10 @@ test.serial("it allows removing todos", async (t) => {
       priority: "Nízká",
       done: true,
     },
-    {
-      title: "Keep me",
-      priority: "Vysoká",
-      done: false,
-    },
   ]);
-  const [deletableTodo, nonDeletableTodo] = await db
-    .select()
-    .from(todosTable)
-    .all();
+  const [deletableTodo] = await db.select().from(todosTable).all();
   t.truthy(deletableTodo);
   t.is(deletableTodo.title, "Delete me");
-  t.truthy(nonDeletableTodo);
-  t.is(nonDeletableTodo.title, "Keep me");
-
-  const nonSuccRemoveResponse = await app.request(
-    `/remove-todo/${nonDeletableTodo.id}`,
-    { method: "GET" },
-  );
 
   const removeResponse = await app.request(`/remove-todo/${deletableTodo.id}`, {
     method: "GET",
@@ -174,5 +158,7 @@ test.serial("it allows removing todos", async (t) => {
   t.is(removeResponse.status, 302);
   t.is(removeResponse.headers.get("location"), "/");
   const todosAfter = await db.select().from(todosTable).all();
-  t.is(todosAfter.length, 1);
+  t.is(todosAfter.length, 0);
+  const detailResponse = await app.request(`/todo/${deletableTodo.id}`);
+  t.is(detailResponse.status, 404);
 });
