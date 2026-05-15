@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Přihlášení</title>
+  </head>
+  <body>
+    <h1>Přihlášení</h1>
+
+    <form method="post" action="/login">
+      <div style="max-width: 240px; display: grid; row-gap: 8px">
+        <label>
+          Jméno
+          <input name="name" required autofocus />
+        </label>
+        <label>
+          Heslo
+          <input name="password" type="password" required />
+        </label>
+        <button type="submit">Přihlásit</button>
+      </div>
+    </form>
+
+    <p><a href="/register">Vytvořit účet</a></p>
+    <p><a href="/">Zpět na seznam</a></p>
+  </body>
+</html>

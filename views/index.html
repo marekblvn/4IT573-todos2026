@@ -6,7 +6,29 @@
     <title>Todo seznam</title>
   </head>
   <body>
-    <h1>&#9989; Todo seznam</h1>
+    <header style="display: flex; justify-content: space-between; align-items: center; gap: 16px;">
+      <h1 style="margin: 0;">&#9989; Todo seznam</h1>
+
+      <% if (currentUser) { %>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <p style="margin: 0;">Přihlášený uživatel: <strong><%= currentUser.name %></strong></p>
+          <form method="post" action="/logout">
+            <button type="submit">Odhlásit</button>
+          </form>
+        </div>
+      <% } else { %>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <form method="get" action="/login">
+            <button type="submit">Přihlásit</button>
+          </form>
+          <form method="get" action="/register">
+            <button type="submit">Registrovat</button>
+          </form>
+        </div>
+      <% } %>
+    </header>
+
+    <hr />
 
     <div id="todo-list"><%- include("_todos.html") %></div>
 
